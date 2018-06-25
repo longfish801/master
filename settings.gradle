@@ -1,0 +1,7 @@
+/*
+ * settings.gradle
+ *
+ * Copyright (C) jp.coocan.cute.longfish All Rights Reserved.
+ */
+
+includeFlat 'shared', 'zenbun', 'yakumo', 'gstart', 'longfish801.github.io';

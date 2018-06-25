@@ -1,0 +1,132 @@
+/*
+ * build.gradle
+ *
+ * Copyright (C) jp.coocan.cute.longfish All Rights Reserved.
+ */
+
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.lib.RepositoryBuilder;
+import org.eclipse.jgit.transport.CredentialsProvider;
+import org.eclipse.jgit.transport.RefSpec;
+import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
+
+Closure doPush = { String user, String password, String pjname, File pjdir, String comment ->
+	// リポジトリのインスタンスを作成します
+	def repos = new RepositoryBuilder().setGitDir(new File(pjdir, '.git')).setWorkTree(pjdir).readEnvironment().build();
+	def git = new Git(repos);
+	if (git.status().call().isClean()){
+		println "no push for ${pjname}";
+	} else {
+		// git add .
+		git.add().addFilepattern('.').call();
+		// git commit -m "[comment]"
+		git.commit().setAll(true).setMessage(comment).call();
+		// git push origin master
+		CredentialsProvider cp = new UsernamePasswordCredentialsProvider('longfish801', password);
+		git.push().setCredentialsProvider(cp).setRemote('origin').setRefSpecs(new RefSpec('master:master')).call();
+		repos.close();
+		println "pushed ${pjname}";
+	}
+}
+
+buildscript {
+	repositories { mavenCentral() }
+	dependencies { classpath 'org.eclipse.jgit:org.eclipse.jgit:4.8.0.201705170830-rc1' }
+}
+
+subprojects {
+	defaultTasks 'clean', 'test';
+	
+	tasks.withType(AbstractCompile).each { it.options.encoding = 'UTF-8' }
+	tasks.withType(GroovyCompile).each { it.groovyOptions.encoding = 'UTF-8' }
+	tasks.withType(Javadoc).each { it.options.encoding = 'UTF-8' }
+	
+	apply plugin: 'maven'
+	apply plugin: 'groovy'
+	
+	group = 'io.github.longfish801';
+	
+	repositories {
+		mavenCentral();
+		maven { url 'https://longfish801.github.io/maven/' }
+	}
+	
+	uploadArchives {
+		repositories { mavenDeployer { repository(url: uri('../longfish801.github.io/maven')) } }
+	}
+	
+	test {
+		systemProperty 'file.encoding', 'UTF-8';
+		minHeapSize = '128m';
+		maxHeapSize = '1024m';
+	}
+	
+	// ドキュメント生成関連のタスクです
+	Map extLinks = [	// 外部参照先URLリスト
+		'http://docs.oracle.com/javase/8/docs/api/' : 'java.,javax.,org.xml.',
+		'http://groovy.codehaus.org/api/' : 'groovy.,org.codehaus.groovy.'
+	];
+	task deleteDoc(type: Delete){
+		delete "../longfish801.github.io/${project.name}/groovydoc";
+	}
+	groovydoc {
+		overviewText resources.text.fromFile('src/main/resources/overview.html');
+		extLinks.each { link(it.key, it.value); };
+	}
+	task doc(type: Copy, dependsOn: [deleteDoc, groovydoc]){
+		from 'build/docs';
+		into "../longfish801.github.io/${project.name}";
+	}
+	
+	// バージョンアップのためのタスクです
+	task versionup(dependsOn: [uploadArchives, doc]){
+		doLast {
+			println "version: ${version}"
+			
+			// 環境変数から GitHubアカウントのパスワードを参照します
+			String password = java.lang.System.getenv()['GITHUB_PWD'];
+			if (password == null){
+				println '環境変数にGitHubアカウントのパスワードが設定されていません。';
+				return;
+			}
+			// リモートリポジトリに変更を反映します
+			try {
+				doPush('longfish801', password, project.name, project.projectDir, "${project.name} ${version}");
+				doPush('longfish801', password, project(':longfish801.github.io').name, project(':longfish801.github.io').projectDir, "${project.name} ${version}");
+			} catch (exc){
+				exc.printStackTrace();
+				throw exc;
+			}
+		}
+	}
+}
+
+allprojects {
+	// GitHub関連のタスクです
+	task push;
+	push.doLast {
+		// 環境変数から GitHubアカウントのパスワードを参照します
+		String password = java.lang.System.getenv()['GITHUB_PWD'];
+		if (password == null){
+			println '環境変数にGitHubアカウントのパスワードが設定されていません。';
+			return;
+		}
+		try {
+			doPush('longfish801', password, project.name, project.projectDir, "tmp ${project.name} ${new Date().format('yyyyMMdd_HHmm')}");
+		} catch (exc){
+			exc.printStackTrace();
+			throw exc;
+		}
+	}
+	
+	task pull;
+	pull.doLast {
+		// リポジトリのインスタンスを作成します
+		def repos = new RepositoryBuilder().setGitDir(new File(project.projectDir, '.git')).setWorkTree(project.projectDir).readEnvironment().build();
+		def git = new Git(repos);
+		// git pull
+		git.pull().call();
+		repos.close();
+		println "pulled ${project.name}";
+	}
+}
