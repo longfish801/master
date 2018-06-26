@@ -5,27 +5,76 @@
  */
 
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.ListBranchCommand.ListMode;
 import org.eclipse.jgit.lib.RepositoryBuilder;
 import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
-Closure doPush = { String user, String password, String pjname, File pjdir, String comment ->
-	// リポジトリのインスタンスを作成します
-	def repos = new RepositoryBuilder().setGitDir(new File(pjdir, '.git')).setWorkTree(pjdir).readEnvironment().build();
-	def git = new Git(repos);
-	if (git.status().call().isClean()){
-		println "no push for ${pjname}";
-	} else {
-		// git add .
-		git.add().addFilepattern('.').call();
-		// git commit -m "[comment]"
-		git.commit().setAll(true).setMessage(comment).call();
-		// git push origin master
-		CredentialsProvider cp = new UsernamePasswordCredentialsProvider('longfish801', password);
-		git.push().setCredentialsProvider(cp).setRemote('origin').setRefSpecs(new RefSpec('master:master')).call();
+String GITHUB_USER = 'longfish801';
+String GITHUB_REMOTE_REPO = 'origin';
+
+
+// 環境変数から GitHubアカウントのパスワードを参照します
+Closure getPassword = {
+	String password = java.lang.System.getenv()['GITHUB_PWD'];
+	if (password == null) throw new IllegalStateException('環境変数にGitHubアカウントのパスワードが設定されていません。');
+	return password;
+}
+
+// Gitインスタンスを返す
+Closure getGit = { def project ->
+	def git = null;
+	try {
+		def repos = new RepositoryBuilder().setGitDir(new File(project.projectDir, '.git')).setWorkTree(project.projectDir).readEnvironment().build();
+		git = new Git(repos);
+	} catch (exc){
+		exc.printStackTrace();
+		throw exc;
+	}
+	return git;
+}
+
+// ローカルの内容をリモートリポジトリに反映します
+Closure doPush = { def project, String branchName, String comment ->
+	try {
+		doPull(project, branchName);
+		def git = getGit.call(project);
+		if (git.status().call().isClean()){
+			println "no push for ${project.name}";
+		} else {
+			// git add .
+			git.add().addFilepattern('.').call();
+			// git commit -m "[comment]"
+			git.commit().setAll(true).setMessage(comment).call();
+			// git push origin master
+			CredentialsProvider cp = new UsernamePasswordCredentialsProvider(GITHUB_USER, getPassword.call());
+			git.push().setCredentialsProvider(cp).setRemote(GITHUB_REMOTE_REPO).setRefSpecs(new RefSpec("${branchName}:${branchName}")).call();
+			repos.close();
+			println "pushed ${project.name}";
+		}
+	} catch (exc){
+		exc.printStackTrace();
+		throw exc;
+	}
+}
+
+// リモートリポジトリの内容をローカルへ反映します
+Closure doPull = { def project, String branchName ->
+	try {
+		// ブランチの一覧を取得し、currentブランチが checkoutされているか確認する
+		def git = getGit.call(project);
+		if (git.branchList().setListMode(ListMode.ALL).call().find { it.name == branchName } == null){
+			throw new IllegalStateException("currentブランチがcheckoutされていません。 project.name=${project.name}");
+		}
+		
+		// currentブランチに切り替えて、リモートリポジトリの内容を反映する
+		git.checkout().setName(branchName).call();
+		git.pull().call();
 		repos.close();
-		println "pushed ${pjname}";
+	} catch (exc){
+		exc.printStackTrace();
+		throw exc;
 	}
 }
 
@@ -83,16 +132,11 @@ subprojects {
 		doLast {
 			println "version: ${version}"
 			
-			// 環境変数から GitHubアカウントのパスワードを参照します
-			String password = java.lang.System.getenv()['GITHUB_PWD'];
-			if (password == null){
-				println '環境変数にGitHubアカウントのパスワードが設定されていません。';
-				return;
-			}
 			// リモートリポジトリに変更を反映します
+			String password = getPassword.call();
 			try {
-				doPush('longfish801', password, project.name, project.projectDir, "${project.name} ${version}");
-				doPush('longfish801', password, project(':longfish801.github.io').name, project(':longfish801.github.io').projectDir, "${project.name} ${version}");
+				doPush(GITHUB_USER, password, project.name, project.projectDir, "${project.name} ${version}");
+				doPush(GITHUB_USER, password, project(':longfish801.github.io').name, project(':longfish801.github.io').projectDir, "${project.name} ${version}");
 			} catch (exc){
 				exc.printStackTrace();
 				throw exc;
@@ -105,14 +149,9 @@ allprojects {
 	// GitHub関連のタスクです
 	task push;
 	push.doLast {
-		// 環境変数から GitHubアカウントのパスワードを参照します
-		String password = java.lang.System.getenv()['GITHUB_PWD'];
-		if (password == null){
-			println '環境変数にGitHubアカウントのパスワードが設定されていません。';
-			return;
-		}
+		String password = getPassword.call();
 		try {
-			doPush('longfish801', password, project.name, project.projectDir, "tmp ${project.name} ${new Date().format('yyyyMMdd_HHmm')}");
+			doPush(GITHUB_USER, password, project.name, project.projectDir, "tmp ${project.name} ${new Date().format('yyyyMMdd_HHmm')}");
 		} catch (exc){
 			exc.printStackTrace();
 			throw exc;
@@ -124,7 +163,14 @@ allprojects {
 		// リポジトリのインスタンスを作成します
 		def repos = new RepositoryBuilder().setGitDir(new File(project.projectDir, '.git')).setWorkTree(project.projectDir).readEnvironment().build();
 		def git = new Git(repos);
-		// git pull
+		
+		// ブランチの一覧を取得し、currentブランチが checkoutされているか確認する
+		if (git.branchList().setListMode(ListMode.ALL).call().find { it.name == 'current' } == null){
+			throw new IllegalStateException("currentブランチがcheckoutされていません。 project.name=${project.name}");
+		}
+		
+		// currentブランチに切り替えて、リモートリポジトリの内容を反映する
+		git.checkout().setName('current').call();
 		git.pull().call();
 		repos.close();
 		println "pulled ${project.name}";
