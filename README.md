@@ -129,7 +129,7 @@ git merge --squash develop
 git push origin master
 ~~~
 
-### 他環境から GitHubを更新した場合にローカルを更新
+### 他環境から GitHubを更新した場合にローカルへ反映
 
 　上記 gradle pullコマンドで一括実行できるため、通常これを実行する必要はありません。  
 　各リポジトリ毎に GitHubからローカルへ最新版を反映したいときには以下を実行します。

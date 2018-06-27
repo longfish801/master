@@ -5,6 +5,7 @@
  */
 
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.CreateBranchCommand;
 import org.eclipse.jgit.api.ListBranchCommand.ListMode;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.RepositoryBuilder;
@@ -90,15 +91,18 @@ class GitHandler {
 	void doPull(String branchName){
 		try {
 			// ブランチの一覧を取得し、ブランチが checkoutされているか確認する
-			String branchPath = git.branchList().setListMode(ListMode.ALL).call().find { it.name.endsWith("/${branchName}") };
-			if (branchPath == null){
-				throw new IllegalStateException("${branchName}ブランチがcheckoutされていません。 project.name=${project.name}");
+			if (git.branchList().setListMode(ListMode.ALL).call().find { it.name == "refs/heads/${branchName}" } == null){
+				// ブランチを checkoutする
+				git.checkout().setCreateBranch(true).setName(branchName)
+					.setUpstreamMode(CreateBranchCommand.SetupUpstreamMode.SET_UPSTREAM)
+					.setStartPoint("origin/${branchName}").call();
+				println "checkout ${project.name} for ${branchName}";
+			} else {
+				// 指定されたブランチに切り替えて、リモートリポジトリの内容を反映する
+				git.checkout().setName(branchName).call();
+				git.pull().call();
+				println "pulled ${project.name} for ${branchName}";
 			}
-			
-			// 指定されたブランチに切り替えて、リモートリポジトリの内容を反映する
-			git.checkout().setName(branchPath).call();
-			git.pull().call();
-			println "pulled ${project.name} for ${branchName}";
 		} catch (exc){
 			exc.printStackTrace();
 			throw exc;
