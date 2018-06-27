@@ -13,6 +13,11 @@ import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.gradle.api.Project;
 
+/**
+ * Gradleプロジェクト毎のGit操作をします。
+ * @version 1.0.00 2018/06/27
+ * @author io.github.longfish801
+ */
 class GitHandler {
 	/** GitHubユーザアカウント */
 	static String GITHUB_ACCOUNT = 'longfish801';
@@ -58,7 +63,7 @@ class GitHandler {
 	void doPush(String branchName, String comment){
 		try {
 			if (git.status().call().isClean()){	// ローカルでの編集がなければ、なにもしません
-				println "no push for ${project.name}";
+				println "no push ${project.name} for ${branchName}";
 			} else {
 				// リモートリポジトリの内容を反映します
 				doPull(branchName);
@@ -69,7 +74,7 @@ class GitHandler {
 				// git push origin master
 				CredentialsProvider cp = new UsernamePasswordCredentialsProvider(GITHUB_ACCOUNT, referPassword());
 				git.push().setCredentialsProvider(cp).setRemote(REMOTE_REPONAME).setRefSpecs(new RefSpec("${branchName}:${branchName}")).call();
-				println "pushed ${project.name}";
+				println "pushed ${project.name} for ${branchName}";
 			}
 		} catch (exc){
 			exc.printStackTrace();
@@ -78,20 +83,21 @@ class GitHandler {
 	}
 	
 	/**
-	 * リモートリポジトリの内容をローカルへダウンロードします。
+	 * リモートリポジトリの内容をローカルへダウンロードします。<br>
+	 * 事前に、対象リポジトリをローカルへ checkoutしておいてください。
 	 * @param branchName ブランチ名
 	 */
 	void doPull(String branchName){
 		try {
-			// ブランチの一覧を取得し、currentブランチが checkoutされているか確認する
+			// ブランチの一覧を取得し、ブランチが checkoutされているか確認する
 			if (git.branchList().setListMode(ListMode.ALL).call().find { it.name.endsWith(branchName) } == null){
-				throw new IllegalStateException("currentブランチがcheckoutされていません。 project.name=${project.name}");
+				throw new IllegalStateException("${branchName}ブランチがcheckoutされていません。 project.name=${project.name}");
 			}
 			
-			// currentブランチに切り替えて、リモートリポジトリの内容を反映する
+			// 指定されたブランチに切り替えて、リモートリポジトリの内容を反映する
 			git.checkout().setName(branchName).call();
 			git.pull().call();
-			println "pulled ${project.name}";
+			println "pulled ${project.name} for ${branchName}";
 		} catch (exc){
 			exc.printStackTrace();
 			throw exc;
@@ -121,17 +127,18 @@ subprojects {
 		maven { url 'https://longfish801.github.io/maven/' }
 	}
 	
-	uploadArchives {
-		repositories { mavenDeployer { repository(url: uri('../longfish801.github.io/maven')) } }
-	}
-	
 	test {
 		systemProperty 'file.encoding', 'UTF-8';
 		minHeapSize = '128m';
 		maxHeapSize = '1024m';
 	}
 	
-	// ドキュメント生成関連のタスクです
+	// MavenリポジトリにJARファイルを格納します
+	uploadArchives {
+		repositories { mavenDeployer { repository(url: uri('../longfish801.github.io/maven')) } }
+	}
+	
+	// APIドキュメント生成関連のタスクです
 	Map extLinks = [	// 外部参照先URLリスト
 		'http://docs.oracle.com/javase/8/docs/api/' : 'java.,javax.,org.xml.',
 		'http://groovy.codehaus.org/api/' : 'groovy.,org.codehaus.groovy.'
@@ -148,24 +155,21 @@ subprojects {
 		into "../longfish801.github.io/${project.name}";
 	}
 	
-	// バージョンアップのためのタスクです
+	// バージョンアップ時のためのタスクです
+	// MavenリポジトリへのJARファイル格納と APIドキュメント生成を実施します
 	task versionup(dependsOn: [uploadArchives, doc]){
-		doLast {
-			println "version: ${version}"
-			// リモートリポジトリに変更を反映します
-			new GitHandler(project).doPush('current', "${project.name} ${version}");
-			new GitHandler(project(':longfish801.github.io')).doPush('current', "${project.name} ${version}");
-		}
+		doLast { println "version: ${version}" }
 	}
 }
 
 allprojects {
-	// GitHub関連のタスクです
+	// すべてのプロジェクトについて、ローカルの currentブランチの内容をリモートへ反映します
 	task push;
 	push.doLast {
 		new GitHandler(project).doPush('current', "tmp ${project.name} ${new Date().format('yyyyMMdd_HHmm')}");
 	}
 	
+	// すべてのプロジェクトについて、リモートから currentブランチの内容をローカルへ反映します
 	task pull;
 	pull.doLast {
 		new GitHandler(project).doPull('current');
