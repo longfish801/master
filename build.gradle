@@ -90,12 +90,13 @@ class GitHandler {
 	void doPull(String branchName){
 		try {
 			// ブランチの一覧を取得し、ブランチが checkoutされているか確認する
-			if (git.branchList().setListMode(ListMode.ALL).call().find { it.name.endsWith(branchName) } == null){
+			String branchPath = git.branchList().setListMode(ListMode.ALL).call().find { it.name.endsWith("/${branchName}") };
+			if (branchPath == null){
 				throw new IllegalStateException("${branchName}ブランチがcheckoutされていません。 project.name=${project.name}");
 			}
 			
 			// 指定されたブランチに切り替えて、リモートリポジトリの内容を反映する
-			git.checkout().setName(branchName).call();
+			git.checkout().setName(branchPath).call();
 			git.pull().call();
 			println "pulled ${project.name} for ${branchName}";
 		} catch (exc){
