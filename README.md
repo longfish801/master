@@ -1,4 +1,4 @@
-﻿# master
+# master
 
 　Gradleマルチプロジェクトのmasterです。
 
@@ -18,28 +18,56 @@ GitHub Pages - longfish801
 https://longfish801.github.io/
 ~~~
 
+## 環境構築
+
+　以下をインストールしてください。
+
+* Java Developers Kit 1.8
+* Gradle 4.0
+* Git 2.10
+
+　任意のフォルダを作成し、以下のコマンドを実行してください。GitHubからリポジトリをダウンロードします。  
+　すべてのリポジトリについて実行してください。リポジトリ名は settings.gradleを参照してください。
+
+~~~
+git clone https://github.com/longfish801/[リポジトリ名]
+~~~
+
+　環境変数GITHUB_PWDに、GitHubアカウントのパスワードを設定してください。
+
+## ブランチモデル
+
+　以下のブランチがあります。  
+　ただし master, longfish801.github.ioには developがありません。
+
+* master
+* develop
+* current
+
+　日々の更新は currentブランチに反映します。  
+　改修の切りのよいところで developブランチにマージします。  
+　マスターアップ時は masterブランチにマージします。
+
 ## Gradle
 ### masterプロジェクト
 
-　全プロジェクトについて、GitHub上の状態をローカルへ反映します。  
+　全プロジェクトについて、GitHub上の currentブランチの内容をローカルへ反映します。
 　他の環境から pushしたならば、作業の最初にこれを実行してください。
 
 ~~~
 gradle clean pull
 ~~~
 
-　全プロジェクトについて、ローカルの編集内容を GitHubへ反映します。  
+　全プロジェクトについて、currentブランチの編集内容を GitHubへ反映します。  
 　編集作業の終了時にこれを実行してください。
 
 ~~~
 gradle clean push
 ~~~
 
-　全プロジェクトとは、正確には master/settings.gradleに記述されているプロジェクトです。
-
 ### 各プロジェクト
 
-　ソース編集時、コンパイルならびにテストを実施します。
+　コンパイルならびにテストを実施します。
 
 ~~~
 gradle
@@ -52,123 +80,74 @@ gradle
 gradle --refresh-dependencies
 ~~~
 
-　バージョンアップします。  
+　JARファイルとAPIドキュメントを longfish801.github.ioリポジトリに出力します。  
 　事前に build.gradleの version変数の値をインクリメントしてください。  
-　プロジェクトの編集内容を GitHubへ反映します。  
-　JARファイルとAPIをlongfish801.github.ioフォルダに出力し、GitHubへ反映します。
+　masterブランチへのマージが別途必要です。
 
 ~~~
 gradle versionup
 ~~~
 
 ## Git
-### 環境構築
+### currentブランチの変更内容を反映する
 
-　任意のフォルダを作成し、以下のコマンドを実行してください。  
-　GitHubからリポジトリをダウンロードします。  
-　すべてのリポジトリについて実行してください。
-
-~~~
-git clone https://github.com/longfish801/[リポジトリ名]
-~~~
-
-### 新規リポジトリ作成
-
-　GitHub上で新規リポジトリを作成します。  
-　以下のコマンドで GitHubからダウンロードします。
+　master, longfish801.github.ioリポジトリでは以下を実行してください。  
+　masterブランチにマージならびに GitHubへ反映しています。
 
 ~~~
-git clone https://github.com/longfish801/[リポジトリ名]
+git checkout master
+git merge --squash current
+git push origin master
 ~~~
 
-　master/settings.gradleにリポジトリ名を追記してください。
+　master, longfish801.github.io以外のリポジトリでは以下を実行してください。  
+　developブランチにマージならびに GitHubへ反映しています。
 
-### 他環境から GitHubを更新した場合にローカルを更新
+~~~
+git checkout develop
+git merge --squash current
+git push origin develop
+~~~
 
-　上記 gradle pullコマンドで一括実行できるため、通常はこれを実行する必要がありません。  
+### マスターアップ
+
+　master, longfish801.github.io以外のリポジトリでマスターアップするときは、以下を実行してください。  
+　なお、developブランチへのマージは済んでいると仮定しています。
+
+　build.gradleの version変数の値をインクリメントしてください。  
+　以下のコマンドで、JARファイルとAPIドキュメントを longfish801.github.ioリポジトリに出力してください。
+
+~~~
+gradle versionup
+~~~
+
+　以下のコマンドで masterブランチへマージし GitHubへ反映してください。
+
+~~~
+git checkout master
+git merge --squash develop
+git push origin master
+~~~
+
+### 他環境から GitHubを更新した場合にローカルへ反映
+
+　上記 gradle pullコマンドで一括実行できるため、通常これを実行する必要はありません。  
 　各リポジトリ毎に GitHubからローカルへ最新版を反映したいときには以下を実行します。
 
 ~~~
+git checkout current
 git pull
 ~~~
 
-　なんらかの事情で、ローカルでの編集をすべて破棄する場合は以下を実行します。  
+### ローカルの編集内容を GitHubへ反映
 
-~~~
-git checkout .
-~~~
-
-### ローカルの編集内容を GitHubに反映
-
-　上記 gradle pushコマンドで一括実行できるため、通常はこれを実行する必要がありません。  
+　上記 gradle pushコマンドで一括実行できるため、通常これを実行する必要はありません。  
 　各リポジトリ毎に編集内容をローカルリポジトリならびに GitHubへコミットするには以下を実行します。
 
 ~~~
-# すべての変更を含むワークツリーの内容をインデックスに追加
-# とりけしは「git reset」
+git checkout current
+git pull
 git add -A
-# 追加されたか確認する
-git status
-# コミットする
 git commit -m "[編集内容のコメントを記述]"
-# リモートリポジトリに反映する
-git push
+git push origin current
 ~~~
-
-## gstartプロジェクト
-### 動作確認環境の作成
-
-　以下のコマンドで releaseフォルダ配下に動作確認環境が作成されます。
-
-~~~
-gradle release
-~~~
-
-### Grapeのログ出力を強化
-
-　Grape関連の動作で問題が生じた場合は、ログ出力を強化して調査します。  
-　以下を参考にしました。
-
-~~~
-groovy grape verbose - Stack Overflow
-https://stackoverflow.com/questions/3722280/groovy-grape-verbose
-~~~
-
-　gstart.l4j.iniに以下を追記します。
-
-~~~
-"-Divy.message.logger.level=4"
-"-Dgroovy.grape.report.downloads=true"
-~~~
-
-　build.gradleについて headerTypeの指定を有効にします。
-
-~~~
-createExe {
-	...
-	headerType = 'console';
-}
-~~~
-
-　gradle releaseを実行します。  
-　生成された gstart.exeを介してスクリプトを実行します。  
-　たとえば WashTxtを実行する場合、以下のコマンドを実行します。  
-　stdout.logに Grapeのログが出力されます。
-
-~~~
-gstart.exe menu\WashTxt\main.gvy > stdout.log
-~~~
-
-### Groovyコマンドで実行
-
-　menuフォルダ配下のスクリプトを groovyコマンドで実行する例を示します。  
-　以下の例では Hello.gvyを実行しています。  
-　事前に gradle releaseの実行が必要となります。
-
-~~~
-set CLASSPATH='.;lib/*;conf'
-set JAVA_OPTS=-Dfile.encoding=UTF-8
-groovy -c UTF-8 menu\サンプル\Hello.gvy
-~~~
-
-以上
