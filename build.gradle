@@ -47,6 +47,16 @@ class GitHandler {
 	}
 	
 	/**
+	 * 環境変数GITHUB_PWDからGitHubアカウントのパスワードを参照します。
+	 * @return パスワード
+	 */
+	String referPassword(){
+		String password = java.lang.System.getenv()['GITHUB_PWD'];
+		if (password == null) throw new IllegalStateException('環境変数にGitHubアカウントのパスワードが設定されていません。');
+		return password;
+	}
+	
+	/**
 	 * ローカルリポジトリの内容をリモートリポジトリにアップロードします。
 	 * @param branchName ブランチ名
 	 * @param comment コミット時のコメント
@@ -63,7 +73,8 @@ class GitHandler {
 				// git commit -m "[comment]"
 				git.commit().setAll(true).setMessage(comment).call();
 				// git push origin master
-				git.push().setRemote(REMOTE_REPONAME).setRefSpecs(new RefSpec("${branchName}:${branchName}")).call();
+				CredentialsProvider credentials = new UsernamePasswordCredentialsProvider(GITHUB_ACCOUNT, referPassword());
+				git.push().setCredentialsProvider(credentials).setRemote(REMOTE_REPONAME).setRefSpecs(new RefSpec("${branchName}:${branchName}")).call();
 				println "pushed ${project.name} for ${branchName}";
 			}
 		} catch (exc){

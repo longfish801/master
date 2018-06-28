@@ -39,6 +39,9 @@ git clone https://github.com/longfish801/[リポジトリ名]
 git remote set-url origin https://longfish801:[パスワード]@github.com/longfish801/[リポジトリ名]
 ~~~
 
+　Gradleタスクでは、GitHubアカウントのパスワードを環境変数GITHUB_PWDから参照します。
+　環境変数GITHUB_PWDに、パスワードを設定してください。
+
 ## ブランチモデル
 
 　以下のブランチがあります。  
