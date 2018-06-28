@@ -47,16 +47,6 @@ class GitHandler {
 	}
 	
 	/**
-	 * 環境変数GITHUB_PWDからGitHubアカウントのパスワードを参照します。
-	 * @return パスワード
-	 */
-	String referPassword(){
-		String password = java.lang.System.getenv()['GITHUB_PWD'];
-		if (password == null) throw new IllegalStateException('環境変数にGitHubアカウントのパスワードが設定されていません。');
-		return password;
-	}
-	
-	/**
 	 * ローカルリポジトリの内容をリモートリポジトリにアップロードします。
 	 * @param branchName ブランチ名
 	 * @param comment コミット時のコメント
@@ -73,8 +63,7 @@ class GitHandler {
 				// git commit -m "[comment]"
 				git.commit().setAll(true).setMessage(comment).call();
 				// git push origin master
-				CredentialsProvider cp = new UsernamePasswordCredentialsProvider(GITHUB_ACCOUNT, referPassword());
-				git.push().setCredentialsProvider(cp).setRemote(REMOTE_REPONAME).setRefSpecs(new RefSpec("${branchName}:${branchName}")).call();
+				git.push().setRemote(REMOTE_REPONAME).setRefSpecs(new RefSpec("${branchName}:${branchName}")).call();
 				println "pushed ${project.name} for ${branchName}";
 			}
 		} catch (exc){
@@ -149,7 +138,7 @@ subprojects {
 		'http://groovy.codehaus.org/api/' : 'groovy.,org.codehaus.groovy.'
 	];
 	task deleteDoc(type: Delete){
-		delete "../longfish801.github.io/${project.name}/groovydoc";
+		delete "../longfish801.github.io/gitdoc/${project.name}/groovydoc";
 	}
 	groovydoc {
 		overviewText resources.text.fromFile('src/main/resources/overview.html');
@@ -157,7 +146,7 @@ subprojects {
 	}
 	task doc(type: Copy, dependsOn: [deleteDoc, groovydoc]){
 		from 'build/docs';
-		into "../longfish801.github.io/${project.name}";
+		into "../longfish801.github.io/gitdoc/${project.name}";
 	}
 	
 	// バージョンアップ時のためのタスクです
