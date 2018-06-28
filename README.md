@@ -33,7 +33,14 @@ https://longfish801.github.io/
 git clone https://github.com/longfish801/[リポジトリ名]
 ~~~
 
-　環境変数GITHUB_PWDに、GitHubアカウントのパスワードを設定してください。
+　パスワード入力を省略するため、リモートリポジトリのURLを修正してください。
+
+~~~
+git remote set-url origin https://longfish801:[パスワード]@github.com/longfish801/[リポジトリ名]
+~~~
+
+　Gradleタスクでは、GitHubアカウントのパスワードを環境変数GITHUB_PWDから参照します。
+　環境変数GITHUB_PWDに、パスワードを設定してください。
 
 ## ブランチモデル
 
@@ -97,6 +104,7 @@ gradle versionup
 ~~~
 git checkout master
 git merge --squash current
+git commit -m "[編集内容のコメントを記述]"
 git push origin master
 ~~~
 
@@ -106,6 +114,7 @@ git push origin master
 ~~~
 git checkout develop
 git merge --squash current
+git commit -m "[編集内容のコメントを記述]"
 git push origin develop
 ~~~
 
@@ -126,7 +135,16 @@ gradle versionup
 ~~~
 git checkout master
 git merge --squash develop
+git commit -m "[編集内容のコメントを記述]"
 git push origin master
+~~~
+
+　必要に応じてタグを作成してください。以下はバージョンを 0.1.00とする場合の例です。
+
+~~~
+git checkout master
+git tag v0.1.00
+git push origin v0.1.00
 ~~~
 
 ### 他環境から GitHubを更新した場合にローカルへ反映
@@ -136,7 +154,7 @@ git push origin master
 
 ~~~
 git checkout current
-git pull
+git pull origin current
 ~~~
 
 ### ローカルの編集内容を GitHubへ反映
@@ -146,7 +164,7 @@ git pull
 
 ~~~
 git checkout current
-git pull
+git pull origin current
 git add -A
 git commit -m "[編集内容のコメントを記述]"
 git push origin current
