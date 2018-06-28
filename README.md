@@ -103,6 +103,7 @@ gradle versionup
 
 ~~~
 git checkout master
+git pull origin master
 git merge --squash current
 git commit -m "[編集内容のコメントを記述]"
 git push origin master
@@ -113,6 +114,7 @@ git push origin master
 
 ~~~
 git checkout develop
+git pull origin develop
 git merge --squash current
 git commit -m "[編集内容のコメントを記述]"
 git push origin develop
@@ -134,6 +136,7 @@ gradle versionup
 
 ~~~
 git checkout master
+git pull origin master
 git merge --squash develop
 git commit -m "[編集内容のコメントを記述]"
 git push origin master
@@ -143,6 +146,7 @@ git push origin master
 
 ~~~
 git checkout master
+git pull origin master
 git tag v0.1.00
 git push origin v0.1.00
 ~~~
