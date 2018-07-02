@@ -87,14 +87,6 @@ gradle
 gradle --refresh-dependencies
 ~~~
 
-　JARファイルとAPIドキュメントを longfish801.github.ioリポジトリに出力します。  
-　事前に build.gradleの version変数の値をインクリメントしてください。  
-　masterブランチへのマージが別途必要です。
-
-~~~
-gradle versionup
-~~~
-
 ## Git
 ### currentブランチの変更内容を反映する
 
