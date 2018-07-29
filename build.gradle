@@ -160,9 +160,9 @@ subprojects {
 		into "../longfish801.github.io/gitdoc/${project.name}";
 	}
 	
-	// バージョンアップ時のためのタスクです
+	// 外部から参照可能にするためのタスクです
 	// MavenリポジトリへのJARファイル格納と APIドキュメント生成を実施します
-	task versionup(dependsOn: [uploadArchives, doc]){
+	task release(dependsOn: [uploadArchives, doc]){
 		doLast { println "version: ${version}" }
 	}
 }

@@ -121,7 +121,7 @@ git push origin develop
 　以下のコマンドで、JARファイルとAPIドキュメントを longfish801.github.ioリポジトリに出力してください。
 
 ~~~
-gradle versionup
+gradle release
 ~~~
 
 　以下のコマンドで masterブランチへマージし GitHubへ反映してください。
@@ -165,3 +165,38 @@ git add -A
 git commit -m "[編集内容のコメントを記述]"
 git push origin current
 ~~~
+
+## リポジトリ追加時の作業
+
+　GitHub上に新しいリポジトリを作成してください。  
+　ローカルへ cloneし、初期ファイルを格納してコミット、リモートリポジトリへ反映してください。
+
+~~~
+git clone https://github.com/longfish801/[リポジトリ名]
+cd [リポジトリ名]
+　→初期ファイルを格納します。
+
+git remote set-url origin https://longfish801:${GITHUB_PWD}@github.com/longfish801/[リポジトリ名]
+git remote -v
+　→認証を省略するため、リポジトリURLを変更します。
+
+git status
+git add .
+git commit -m "first commit"
+git push -u origin master
+~~~
+
+　必要に応じて master, developブランチを作成してください。
+
+~~~
+git checkout master
+git checkout -b develop
+git push -u origin develop
+
+git checkout develop
+git checkout -b current
+git push -u origin current
+~~~
+
+　masterの settings.gradleにリポジトリ名を追記してください。
+
