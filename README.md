@@ -88,7 +88,7 @@ gradle --refresh-dependencies
 ~~~
 
 ## Git
-### currentブランチの変更内容を反映する
+### リリース
 
 　master, longfish801.github.ioリポジトリでは以下を実行してください。  
 　masterブランチにマージならびに GitHubへ反映しています。
