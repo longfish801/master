@@ -33,7 +33,14 @@ https://longfish801.github.io/
 git clone https://github.com/longfish801/[リポジトリ名]
 ~~~
 
-　環境変数GITHUB_PWDに、GitHubアカウントのパスワードを設定してください。
+　パスワード入力を省略するため、リモートリポジトリのURLを修正してください。
+
+~~~
+git remote set-url origin https://longfish801:[パスワード]@github.com/longfish801/[リポジトリ名]
+~~~
+
+　Gradleタスクでは、GitHubアカウントのパスワードを環境変数GITHUB_PWDから参照します。
+　環境変数GITHUB_PWDに、パスワードを設定してください。
 
 ## ブランチモデル
 
@@ -80,23 +87,17 @@ gradle
 gradle --refresh-dependencies
 ~~~
 
-　JARファイルとAPIドキュメントを longfish801.github.ioリポジトリに出力します。  
-　事前に build.gradleの version変数の値をインクリメントしてください。  
-　masterブランチへのマージが別途必要です。
-
-~~~
-gradle versionup
-~~~
-
 ## Git
-### currentブランチの変更内容を反映する
+### リリース
 
 　master, longfish801.github.ioリポジトリでは以下を実行してください。  
 　masterブランチにマージならびに GitHubへ反映しています。
 
 ~~~
 git checkout master
+git pull origin master
 git merge --squash current
+git commit -m "[編集内容のコメントを記述]"
 git push origin master
 ~~~
 
@@ -105,7 +106,9 @@ git push origin master
 
 ~~~
 git checkout develop
+git pull origin develop
 git merge --squash current
+git commit -m "[編集内容のコメントを記述]"
 git push origin develop
 ~~~
 
@@ -118,15 +121,26 @@ git push origin develop
 　以下のコマンドで、JARファイルとAPIドキュメントを longfish801.github.ioリポジトリに出力してください。
 
 ~~~
-gradle versionup
+gradle release
 ~~~
 
 　以下のコマンドで masterブランチへマージし GitHubへ反映してください。
 
 ~~~
 git checkout master
+git pull origin master
 git merge --squash develop
+git commit -m "[編集内容のコメントを記述]"
 git push origin master
+~~~
+
+　必要に応じてタグを作成してください。以下はバージョンを 0.1.00とする場合の例です。
+
+~~~
+git checkout master
+git pull origin master
+git tag v0.1.00
+git push origin v0.1.00
 ~~~
 
 ### 他環境から GitHubを更新した場合にローカルへ反映
@@ -136,7 +150,7 @@ git push origin master
 
 ~~~
 git checkout current
-git pull
+git pull origin current
 ~~~
 
 ### ローカルの編集内容を GitHubへ反映
@@ -146,8 +160,43 @@ git pull
 
 ~~~
 git checkout current
-git pull
+git pull origin current
 git add -A
 git commit -m "[編集内容のコメントを記述]"
 git push origin current
 ~~~
+
+## リポジトリ追加時の作業
+
+　GitHub上に新しいリポジトリを作成してください。  
+　ローカルへ cloneし、初期ファイルを格納してコミット、リモートリポジトリへ反映してください。
+
+~~~
+git clone https://github.com/longfish801/[リポジトリ名]
+cd [リポジトリ名]
+　→初期ファイルを格納します。
+
+git remote set-url origin https://longfish801:${GITHUB_PWD}@github.com/longfish801/[リポジトリ名]
+git remote -v
+　→認証を省略するため、リポジトリURLを変更します。
+
+git status
+git add .
+git commit -m "first commit"
+git push -u origin master
+~~~
+
+　必要に応じて master, developブランチを作成してください。
+
+~~~
+git checkout master
+git checkout -b develop
+git push -u origin develop
+
+git checkout develop
+git checkout -b current
+git push -u origin current
+~~~
+
+　masterの settings.gradleにリポジトリ名を追記してください。
+

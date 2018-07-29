@@ -73,8 +73,8 @@ class GitHandler {
 				// git commit -m "[comment]"
 				git.commit().setAll(true).setMessage(comment).call();
 				// git push origin master
-				CredentialsProvider cp = new UsernamePasswordCredentialsProvider(GITHUB_ACCOUNT, referPassword());
-				git.push().setCredentialsProvider(cp).setRemote(REMOTE_REPONAME).setRefSpecs(new RefSpec("${branchName}:${branchName}")).call();
+				CredentialsProvider credentials = new UsernamePasswordCredentialsProvider(GITHUB_ACCOUNT, referPassword());
+				git.push().setCredentialsProvider(credentials).setRemote(REMOTE_REPONAME).setRefSpecs(new RefSpec("${branchName}:${branchName}")).call();
 				println "pushed ${project.name} for ${branchName}";
 			}
 		} catch (exc){
@@ -149,7 +149,7 @@ subprojects {
 		'http://groovy.codehaus.org/api/' : 'groovy.,org.codehaus.groovy.'
 	];
 	task deleteDoc(type: Delete){
-		delete "../longfish801.github.io/${project.name}/groovydoc";
+		delete "../longfish801.github.io/gitdoc/${project.name}/groovydoc";
 	}
 	groovydoc {
 		overviewText resources.text.fromFile('src/main/resources/overview.html');
@@ -157,12 +157,12 @@ subprojects {
 	}
 	task doc(type: Copy, dependsOn: [deleteDoc, groovydoc]){
 		from 'build/docs';
-		into "../longfish801.github.io/${project.name}";
+		into "../longfish801.github.io/gitdoc/${project.name}";
 	}
 	
-	// バージョンアップ時のためのタスクです
+	// 外部から参照可能にするためのタスクです
 	// MavenリポジトリへのJARファイル格納と APIドキュメント生成を実施します
-	task versionup(dependsOn: [uploadArchives, doc]){
+	task release(dependsOn: [uploadArchives, doc]){
 		doLast { println "version: ${version}" }
 	}
 }

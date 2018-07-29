@@ -4,4 +4,4 @@
  * Copyright (C) jp.coocan.cute.longfish All Rights Reserved.
  */
 
-includeFlat 'shared', 'zenbun', 'yakumo', 'gstart', 'longfish801.github.io';
+includeFlat 'shared', 'zenbun', 'tpac', 'clmap', 'washsh', 'bltxt', 'yakumo', 'gstart', 'longfish801.github.io';
