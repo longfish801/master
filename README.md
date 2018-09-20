@@ -1,6 +1,6 @@
 # master
 
-　Gradleマルチプロジェクトのmasterです。
+　Gradleマルチプロジェクトの masterです。
 
 ## Github
 
@@ -33,14 +33,13 @@ https://longfish801.github.io/
 git clone https://github.com/longfish801/[リポジトリ名]
 ~~~
 
-　パスワード入力を省略するため、リモートリポジトリのURLを修正してください。
-
-~~~
-git remote set-url origin https://longfish801:[パスワード]@github.com/longfish801/[リポジトリ名]
-~~~
-
-　Gradleタスクでは、GitHubアカウントのパスワードを環境変数GITHUB_PWDから参照します。
+　パスワード入力を省略するため、リモートリポジトリのURLを修正してください。  
+　Gradleタスクでは、GitHubアカウントのパスワードを環境変数GITHUB_PWDから参照します。  
 　環境変数GITHUB_PWDに、パスワードを設定してください。
+
+~~~
+git remote set-url origin https://longfish801:${GITHUB_PWD}@github.com/longfish801/[リポジトリ名]
+~~~
 
 ## ブランチモデル
 
@@ -52,11 +51,27 @@ git remote set-url origin https://longfish801:[パスワード]@github.com/longf
 * current
 
 　日々の更新は currentブランチに反映します。  
-　改修の切りのよいところで developブランチにマージします。  
-　マスターアップ時は masterブランチにマージします。
+　改修の切りのよいところで developブランチにマージします（フィックス）。  
+　マスターアップ時は masterブランチにマージします（マスターアップ）。
+　加えて JARファイルと APIドキュメントを公開します（リリース）。
 
-## Gradle
-### masterプロジェクト
+## コンパイルならびにテスト
+
+　各プロジェクトで実施します。  
+　コンパイルならびにテストを実施します。詳細は各プロジェクトの Readmeや build.gradleを参照してください。
+
+~~~
+gradle
+~~~
+
+　依存ライブラリが更新されても、すぐには反映されないことがあります。  
+　その場合、以下を実行してください。
+
+~~~
+gradle --refresh-dependencies
+~~~
+
+## 日々の更新
 
 　全プロジェクトについて、GitHub上の currentブランチの内容をローカルへ反映します。
 　他の環境から pushしたならば、作業の最初にこれを実行してください。
@@ -72,65 +87,73 @@ gradle clean pull
 gradle clean push
 ~~~
 
-### 各プロジェクト
+　上記は masterプロジェクトの build.gradleに記述したタスクで実現しています。  
+　これは以下の gitコマンドを実行した場合に相当します（上記 gradleコマンドで一括実行できるため、通常これらを実行する必要はありません）。
 
-　コンパイルならびにテストを実施します。
-
-~~~
-gradle
-~~~
-
-　依存ライブラリが更新されても、すぐには反映されないことがあります。  
-　その場合、以下を実行してください。
+　GitHubからローカルへ最新版を反映したいときには、プロジェクトごとに以下を実行します。  
+　Xtheirsオプションでリモート側に強制的に合わせていることに注意してください。
 
 ~~~
-gradle --refresh-dependencies
+git checkout current
+git pull -Xtheirs origin current
 ~~~
 
-## Git
-### リリース
-
-　master, longfish801.github.ioリポジトリでは以下を実行してください。  
-　masterブランチにマージならびに GitHubへ反映しています。
+　編集内容をローカルリポジトリならびに GitHubへコミットするには、プロジェクトごとに以下を実行します。
 
 ~~~
-git checkout master
-git pull origin master
-git merge --squash current
+git add -A
 git commit -m "[編集内容のコメントを記述]"
-git push origin master
+git push origin current
 ~~~
 
-　master, longfish801.github.io以外のリポジトリでは以下を実行してください。  
+## フィックス
+
+　機能追加やバグフィックスなど、切りの良いところでフィックスします。  
 　developブランチにマージならびに GitHubへ反映しています。
 
 ~~~
+> currentをコミットおよび GitHubへ反映します
+gradle clean push
+> developに currentを上書きマージします
 git checkout develop
 git pull origin develop
-git merge --squash current
-git commit -m "[編集内容のコメントを記述]"
+git merge --squash -Xours current
+gradle
+　→マージが失敗している可能性があるため、確認をします
+gradle clean
+git status
+git add -A
+git commit -m "[コミット内容の説明]"
+> リモートに反映します
 git push origin develop
+> currentを再作成します
+git branch -D current
+git push --delete origin current
+git checkout -b current
+git push -u origin current
 ~~~
 
-### マスターアップ
+## マスターアップ
 
-　master, longfish801.github.io以外のリポジトリでマスターアップするときは、以下を実行してください。  
-　なお、developブランチへのマージは済んでいると仮定しています。
+　マスターアップするときは、以下を実施してください。  
+　なお、先にフィックスを済ませている必要があります。
 
-　build.gradleの version変数の値をインクリメントしてください。  
-　以下のコマンドで、JARファイルとAPIドキュメントを longfish801.github.ioリポジトリに出力してください。
-
-~~~
-gradle release
-~~~
+　build.gradleの version変数の値を確認し、必要であればインクリメントしてください。
 
 　以下のコマンドで masterブランチへマージし GitHubへ反映してください。
 
 ~~~
+> masterに developを上書きマージします
 git checkout master
 git pull origin master
-git merge --squash develop
-git commit -m "[編集内容のコメントを記述]"
+git merge --squash -Xours develop
+gradle
+　→マージが失敗している可能性があるため、確認をします
+gradle clean
+git status
+git add -A
+git commit -m "[プロジェクト名] [バージョン] masterup"
+> リモートに反映します
 git push origin master
 ~~~
 
@@ -143,60 +166,70 @@ git tag v0.1.00
 git push origin v0.1.00
 ~~~
 
-### 他環境から GitHubを更新した場合にローカルへ反映
+## リリース
 
-　上記 gradle pullコマンドで一括実行できるため、通常これを実行する必要はありません。  
-　各リポジトリ毎に GitHubからローカルへ最新版を反映したいときには以下を実行します。
-
-~~~
-git checkout current
-git pull origin current
-~~~
-
-### ローカルの編集内容を GitHubへ反映
-
-　上記 gradle pushコマンドで一括実行できるため、通常これを実行する必要はありません。  
-　各リポジトリ毎に編集内容をローカルリポジトリならびに GitHubへコミットするには以下を実行します。
+　リリース対象のプロジェクトにて、以下のコマンドを実行してください。
+　JARファイルとAPIドキュメントを longfish801.github.ioリポジトリに出力します。
 
 ~~~
-git checkout current
-git pull origin current
+git checkout master
+git pull origin master
+gradle release
+~~~
+
+　longfish801.github.ioリポジトリで以下を実行します。
+　masterブランチにマージならびに GitHubへ反映しています。
+
+~~~
+> currentをコミットおよび GitHubへ反映します
+gradle clean push
+> masterに currentを上書きマージします
+git checkout master
+git pull origin master
+git merge --squash -Xours current
+git status
 git add -A
-git commit -m "[編集内容のコメントを記述]"
-git push origin current
+git commit -m "[プロジェクト名] [バージョン] release"
+> リモートに反映します
+git push origin master
+> currentを再作成します
+git branch -D current
+git push --delete origin current
+git checkout -b current
+git push -u origin current
 ~~~
 
-## リポジトリ追加時の作業
+## リポジトリ追加時
 
-　GitHub上に新しいリポジトリを作成してください。  
-　ローカルへ cloneし、初期ファイルを格納してコミット、リモートリポジトリへ反映してください。
+　GitHub上に新しいリポジトリを作成し、以下を実行してください。
 
 ~~~
+> ローカルへクローンします
 git clone https://github.com/longfish801/[リポジトリ名]
 cd [リポジトリ名]
-　→初期ファイルを格納します。
-
+　→初期ファイルを格納します
+> 認証を省略するためリポジトリURLを変更します
 git remote set-url origin https://longfish801:${GITHUB_PWD}@github.com/longfish801/[リポジトリ名]
 git remote -v
-　→認証を省略するため、リポジトリURLを変更します。
-
+> コミットならびに GitHubへ反映します
 git status
 git add .
 git commit -m "first commit"
 git push -u origin master
 ~~~
 
-　必要に応じて master, developブランチを作成してください。
+　必要に応じて develop, currentブランチを作成してください。
 
 ~~~
+> developブランチを作成します
 git checkout master
 git checkout -b develop
 git push -u origin develop
-
+> currentブランチを作成します
 git checkout develop
 git checkout -b current
 git push -u origin current
 ~~~
 
-　masterの settings.gradleにリポジトリ名を追記してください。
+　masterリポジトリの settings.gradleにリポジトリ名を追記してください。
 

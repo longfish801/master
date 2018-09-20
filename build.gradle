@@ -9,6 +9,7 @@ import org.eclipse.jgit.api.CreateBranchCommand;
 import org.eclipse.jgit.api.ListBranchCommand.ListMode;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.RepositoryBuilder;
+import org.eclipse.jgit.merge.MergeStrategy;
 import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
@@ -66,8 +67,6 @@ class GitHandler {
 			if (git.status().call().isClean()){	// ローカルでの編集がなければ、なにもしません
 				println "no push ${project.name} for ${branchName}";
 			} else {
-				// リモートリポジトリの内容を反映します
-				doPull(branchName);
 				// git add .
 				git.add().addFilepattern('.').call();
 				// git commit -m "[comment]"
@@ -100,7 +99,7 @@ class GitHandler {
 			} else {
 				// 指定されたブランチに切り替えて、リモートリポジトリの内容を反映する
 				git.checkout().setName(branchName).call();
-				git.pull().call();
+				git.pull().setStrategy(MergeStrategy.THEIRS).call();
 				println "pulled ${project.name} for ${branchName}";
 			}
 		} catch (exc){
@@ -112,7 +111,7 @@ class GitHandler {
 
 buildscript {
 	repositories { mavenCentral() }
-	dependencies { classpath 'org.eclipse.jgit:org.eclipse.jgit:4.8.0.201705170830-rc1' }
+	dependencies { classpath 'org.eclipse.jgit:org.eclipse.jgit:5.0.2.201807311906-r' }
 }
 
 subprojects {
