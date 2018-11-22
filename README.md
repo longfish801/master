@@ -23,8 +23,16 @@ https://longfish801.github.io/
 　以下をインストールしてください。
 
 * Java Developers Kit 1.8
-* Gradle 4.0
-* Git 2.10
+* Gradle 4.10
+* Git 2.19
+
+　Chocolateyでのインストールコマンドサンプルを示します。
+
+~~~
+choco install -y jdk8
+choco install -y gradle
+choco install -y git
+~~~
 
 　任意のフォルダを作成し、以下のコマンドを実行してください。GitHubからリポジトリをダウンロードします。  
 　すべてのリポジトリについて実行してください。リポジトリ名は settings.gradleを参照してください。
@@ -34,11 +42,10 @@ git clone https://github.com/longfish801/[リポジトリ名]
 ~~~
 
 　パスワード入力を省略するため、リモートリポジトリのURLを修正してください。  
-　Gradleタスクでは、GitHubアカウントのパスワードを環境変数GITHUB_PWDから参照します。  
-　環境変数GITHUB_PWDに、パスワードを設定してください。
 
 ~~~
-git remote set-url origin https://longfish801:${GITHUB_PWD}@github.com/longfish801/[リポジトリ名]
+git remote set-url origin git@github.com:longfish801/[リポジトリ名].git
+git remote -v
 ~~~
 
 ## ブランチモデル
@@ -73,7 +80,7 @@ gradle --refresh-dependencies
 
 ## 日々の更新
 
-　全プロジェクトについて、GitHub上の currentブランチの内容をローカルへ反映します。
+　全プロジェクトについて、GitHub上の currentブランチの内容をローカルへ反映します。  
 　他の環境から pushしたならば、作業の最初にこれを実行してください。
 
 ~~~
@@ -117,7 +124,7 @@ gradle clean push
 > developに currentを上書きマージします
 git checkout develop
 git pull origin develop
-git merge --squash -Xours current
+git merge --squash -Xtheirs current
 gradle
 　→マージが失敗している可能性があるため、確認をします
 gradle clean
@@ -126,18 +133,14 @@ git add -A
 git commit -m "[コミット内容の説明]"
 > リモートに反映します
 git push origin develop
-> currentを再作成します
-git branch -D current
-git push --delete origin current
-git checkout -b current
-git push -u origin current
+> currentブランチに戻ります
+git checkout current
 ~~~
 
 ## マスターアップ
 
 　マスターアップするときは、以下を実施してください。  
-　なお、先にフィックスを済ませている必要があります。
-
+　なお、先にフィックスを済ませている必要があります。  
 　build.gradleの version変数の値を確認し、必要であればインクリメントしてください。
 
 　以下のコマンドで masterブランチへマージし GitHubへ反映してください。
@@ -146,7 +149,7 @@ git push -u origin current
 > masterに developを上書きマージします
 git checkout master
 git pull origin master
-git merge --squash -Xours develop
+git merge --squash -Xtheirs develop
 gradle
 　→マージが失敗している可能性があるため、確認をします
 gradle clean
@@ -155,6 +158,8 @@ git add -A
 git commit -m "[プロジェクト名] [バージョン] masterup"
 > リモートに反映します
 git push origin master
+> currentブランチに戻ります
+git checkout current
 ~~~
 
 　必要に応じてタグを作成してください。以下はバージョンを 0.1.00とする場合の例です。
@@ -166,9 +171,19 @@ git tag v0.1.00
 git push origin v0.1.00
 ~~~
 
+　currentブランチの履歴が不要であれば、再作成により削除してください。
+
+~~~
+> currentを再作成します
+git branch -D current
+git push --delete origin current
+git checkout -b current
+git push -u origin current
+~~~
+
 ## リリース
 
-　リリース対象のプロジェクトにて、以下のコマンドを実行してください。
+　リリース対象のプロジェクトにて、以下のコマンドを実行してください。  
 　JARファイルとAPIドキュメントを longfish801.github.ioリポジトリに出力します。
 
 ~~~
@@ -177,7 +192,7 @@ git pull origin master
 gradle release
 ~~~
 
-　longfish801.github.ioリポジトリで以下を実行します。
+　longfish801.github.ioリポジトリで以下を実行します。  
 　masterブランチにマージならびに GitHubへ反映しています。
 
 ~~~
@@ -186,17 +201,14 @@ gradle clean push
 > masterに currentを上書きマージします
 git checkout master
 git pull origin master
-git merge --squash -Xours current
+git merge --squash -Xtheirs current
 git status
 git add -A
 git commit -m "[プロジェクト名] [バージョン] release"
 > リモートに反映します
 git push origin master
-> currentを再作成します
-git branch -D current
-git push --delete origin current
-git checkout -b current
-git push -u origin current
+> currentブランチに戻ります
+git checkout current
 ~~~
 
 ## リポジトリ追加時
@@ -209,7 +221,7 @@ git clone https://github.com/longfish801/[リポジトリ名]
 cd [リポジトリ名]
 　→初期ファイルを格納します
 > 認証を省略するためリポジトリURLを変更します
-git remote set-url origin https://longfish801:${GITHUB_PWD}@github.com/longfish801/[リポジトリ名]
+git remote set-url origin git@github.com:longfish801/[リポジトリ名].git
 git remote -v
 > コミットならびに GitHubへ反映します
 git status

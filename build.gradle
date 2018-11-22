@@ -4,6 +4,8 @@
  * Copyright (C) jp.coocan.cute.longfish All Rights Reserved.
  */
 
+import javax.swing.JOptionPane;
+import javax.swing.JPasswordField;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.CreateBranchCommand;
 import org.eclipse.jgit.api.ListBranchCommand.ListMode;
@@ -48,16 +50,6 @@ class GitHandler {
 	}
 	
 	/**
-	 * 環境変数GITHUB_PWDからGitHubアカウントのパスワードを参照します。
-	 * @return パスワード
-	 */
-	String referPassword(){
-		String password = java.lang.System.getenv()['GITHUB_PWD'];
-		if (password == null) throw new IllegalStateException('環境変数にGitHubアカウントのパスワードが設定されていません。');
-		return password;
-	}
-	
-	/**
 	 * ローカルリポジトリの内容をリモートリポジトリにアップロードします。
 	 * @param branchName ブランチ名
 	 * @param comment コミット時のコメント
@@ -72,7 +64,8 @@ class GitHandler {
 				// git commit -m "[comment]"
 				git.commit().setAll(true).setMessage(comment).call();
 				// git push origin master
-				CredentialsProvider credentials = new UsernamePasswordCredentialsProvider(GITHUB_ACCOUNT, referPassword());
+				String githubPwd = (System.getenv('https_proxy') == null)? '' : inputPassword('Input GitHub Pwd');
+				CredentialsProvider credentials = new UsernamePasswordCredentialsProvider(GITHUB_ACCOUNT, githubPwd);
 				git.push().setCredentialsProvider(credentials).setRemote(REMOTE_REPONAME).setRefSpecs(new RefSpec("${branchName}:${branchName}")).call();
 				println "pushed ${project.name} for ${branchName}";
 			}
@@ -106,6 +99,18 @@ class GitHandler {
 			exc.printStackTrace();
 			throw exc;
 		}
+	}
+	
+	/**
+	 * パスワード入力用のダイアログを表示し、入力値を返します。
+	 * @param message ダイアログに表示するメッセージ
+	 * @return ダイアログへの入力値（キャンセル時は空文字）
+	 */
+	String inputPassword(String message){
+		JPasswordField pass = new JPasswordField();
+		Object[] opts = [ message, pass ] as Object[];
+		int clicked = JOptionPane.showConfirmDialog(null, opts, null, JOptionPane.OK_CANCEL_OPTION);
+		return (clicked == JOptionPane.OK_OPTION)? new String(pass.password) : '';
 	}
 }
 
