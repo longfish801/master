@@ -144,7 +144,7 @@ subprojects {
 	
 	// MavenリポジトリにJARファイルを格納します
 	uploadArchives {
-		repositories { mavenDeployer { repository(url: uri('../longfish801.github.io/maven')) } }
+		repositories { mavenDeployer { repository(url: uri('../maven')) } }
 	}
 	
 	// APIドキュメント生成関連のタスクです
@@ -153,7 +153,7 @@ subprojects {
 		'http://groovy.codehaus.org/api/' : 'groovy.,org.codehaus.groovy.'
 	];
 	task deleteDoc(type: Delete){
-		delete "../longfish801.github.io/gitdoc/${project.name}/groovydoc";
+		delete "doc/gitdoc/${project.name}/groovydoc";
 	}
 	groovydoc {
 		overviewText resources.text.fromFile('src/main/resources/overview.html');
@@ -161,7 +161,7 @@ subprojects {
 	}
 	task doc(type: Copy, dependsOn: [deleteDoc, groovydoc]){
 		from 'build/docs';
-		into "../longfish801.github.io/gitdoc/${project.name}";
+		into "doc/gitdoc/${project.name}";
 	}
 	
 	// 外部から参照可能にするためのタスクです
