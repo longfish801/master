@@ -166,7 +166,7 @@ subprojects {
 	
 	// 外部から参照可能にするためのタスクです
 	// MavenリポジトリへのJARファイル格納と APIドキュメント生成を実施します
-	task release(dependsOn: [uploadArchives, doc]){
+	task release(dependsOn: [uploadArchives]){
 		doLast { println "version: ${version}" }
 	}
 }
