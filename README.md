@@ -162,13 +162,13 @@ git push origin master
 git checkout current
 ~~~
 
-　必要に応じてタグを作成してください。以下はバージョンを 0.1.00とする場合の例です。
+　必要に応じてタグを作成してください。以下はバージョンを 0.2.00とする場合の例です。
 
 ~~~
 git checkout master
 git pull origin master
-git tag v0.1.00
-git push origin v0.1.00
+git tag v0.2.00
+git push origin v0.2.00
 ~~~
 
 　currentブランチの履歴が不要であれば、再作成により削除してください。

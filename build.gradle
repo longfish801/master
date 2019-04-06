@@ -153,7 +153,7 @@ subprojects {
 		'http://groovy.codehaus.org/api/' : 'groovy.,org.codehaus.groovy.'
 	];
 	task deleteDoc(type: Delete){
-		delete "doc/gitdoc/${project.name}/groovydoc";
+		delete "docs/groovydoc";
 	}
 	groovydoc {
 		overviewText resources.text.fromFile('src/main/resources/overview.html');
@@ -161,7 +161,7 @@ subprojects {
 	}
 	task doc(type: Copy, dependsOn: [deleteDoc, groovydoc]){
 		from 'build/docs';
-		into "doc/gitdoc/${project.name}";
+		into "docs";
 	}
 	
 	// 外部から参照可能にするためのタスクです
