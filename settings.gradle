@@ -4,4 +4,4 @@
  * Copyright (C) jp.coocan.cute.longfish All Rights Reserved.
  */
 
-includeFlat 'yakumo', 'gstart';
+includeFlat 'gstart';
